@@ -40,7 +40,7 @@ class RiskMetrics:
         Args:
             risk_free_rate: Annual risk-free rate as decimal (default: 0.02)
         """
-        pass
+        self.risk_free_rate = risk_free_rate if risk_free_rate is not None else 0.02
     
     def calculate_historical_var(self, returns: pd.Series, confidence_level: float = 0.95) -> float:
         """
@@ -157,7 +157,10 @@ class RiskMetrics:
         Returns:
             Sharpe ratio
         """
-        excess_returns = returns - risk_free_rate
+        rf_rate = risk_free_rate if risk_free_rate is not None else self.risk_free_rate
+        if rf_rate is None:
+            rf_rate = 0.02
+        excess_returns = returns - rf_rate/252
         sharpe_ratio = excess_returns.mean() / returns.std()
         return sharpe_ratio
     
@@ -172,7 +175,10 @@ class RiskMetrics:
         Returns:
             Sortino ratio
         """
-        excess_returns = returns - risk_free_rate
+        rf_rate = risk_free_rate if risk_free_rate is not None else self.risk_free_rate
+        if rf_rate is None:
+            rf_rate = 0.02
+        excess_returns = returns - rf_rate/252
         downside_returns = excess_returns[excess_returns < 0]
         sortino_ratio = excess_returns.mean() / downside_returns.std()
 

@@ -7,7 +7,7 @@ from typing import List, Dict, Optional, Union
 from datetime import datetime, timedelta
 import logging
 import time
-from data_fetcher import DataFetcher
+from .data_fetcher import DataFetcher
 
 
 class PortfolioLoader:
@@ -23,6 +23,7 @@ class PortfolioLoader:
         self.filepath = filepath
         self.date_format = date_format
         self.df = pd.DataFrame()
+        self.fetcher = fetcher or DataFetcher()
     
     def load_portfolio(self) -> pd.DataFrame:
         """
@@ -45,17 +46,17 @@ class PortfolioLoader:
         Clean and process the loaded DataFrame.
         """
         # Ensure required columns are present
-        required_columns = {'Symbol', 'Quantity', 'Average Cost Basis'}
+        required_columns = {'Symbol', 'Quantity','Percent Of Account', 'Average Cost Basis'}
         if not required_columns.issubset(self.df.columns):
             missing = required_columns - set(self.df.columns)
             raise ValueError(f"Missing required columns: {missing}")
-        self.df.rename(columns={'Symbol': 'Ticker', 'Quantity': 'Shares', 'Average Cost Basis': 'Avg Cost'}, inplace=True)
+        self.df.rename(columns={'Symbol': 'Ticker', 'Quantity': 'Shares','Percent Of Account': 'Weight', 'Average Cost Basis': 'Avg Cost'}, inplace=True)
 
         #Drop all columns except Ticker, Shares, Avg Cost
-        self.df = self.df[['Ticker', 'Shares', 'Avg Cost']]
+        self.df = self.df[['Ticker', 'Shares','Weight', 'Avg Cost']]
         
         # Drop rows with invalid Ticker
-        self.df = self.df[self.df['Ticker'].apply(lambda x: DataFetcher.ticker_valid(x))]
+        self.df = self.df[self.df['Ticker'].apply(lambda x: self.fetcher.validate_ticker(x))]
             
         
         # Ensure 'Shares' is numeric and positive
@@ -67,5 +68,5 @@ class PortfolioLoader:
         """
         Add current prices to the DataFrame.
         """
-        self.df['Current Price'] = self.df['Ticker'].apply(lambda ticker: DataFetcher.get_current_price(ticker))
+        self.df['Current Price'] = self.df['Ticker'].apply(lambda ticker: self.fetcher.get_current_price(ticker))
         self.df['Current Value'] = self.df['Shares'] * self.df['Current Price']
