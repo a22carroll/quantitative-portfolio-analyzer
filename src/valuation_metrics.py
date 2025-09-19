@@ -168,7 +168,7 @@ class ValuationMetrics:
         for i, ticker in enumerate(tickers):
             fundamentals = portfolio_data[ticker].get('fundamentals')
             if fundamentals and fundamentals.get('dividend_yield'):
-                div_yield = fundamentals['dividend_yield'] * 100  # Convert to percentage
+                div_yield = fundamentals['dividend_yield'] 
                 weighted_yield += div_yield * weights_normalized[i]
         
         return weighted_yield
