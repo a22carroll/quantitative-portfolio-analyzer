@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 import logging
 import time
 
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -23,6 +22,23 @@ class DataFetcher:
         """
         self.delay_seconds = delay_seconds
         self._cache = {}  # Simple in-memory cache
+    
+    def ticker_valid(self, ticker: str) -> bool:
+        """
+        Check if a ticker symbol is valid by attempting to fetch its info.
+        
+        Args:
+            ticker: Stock symbol to validate
+        Returns:
+            True if valid, False otherwise
+        """
+        try:
+            stock = yf.Ticker(ticker)
+            info = stock.info
+            return bool(info and 'symbol' in info)
+        except Exception as e:
+            logger.error(f"Error validating ticker {ticker}: {e}")
+            return False
     
     def get_current_price(self, ticker: str) -> Optional[float]:
         """
